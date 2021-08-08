@@ -5,16 +5,19 @@ var context = canvas.getContext("2d");
 
 //Initial parameters set
 
-var numBoids = 300;
+var numBoids = 150;
 var boids = [];
-var sensingRadius = 150;
-var maxSpeed = 4;
+var sensingRadius = 120;
+var separationRadius = 30;
+var wallDisplacement = 65;
+var maxSpeed = 5;
 
 var cohesionCo = 2000;
-var separationCo = 8;
-var alignmentCo = 200;
+var separationCo = 7;
+var alignmentCo = 100;
 
 var debugging = false;
+var walls = true;
 
 
 class Boid {
@@ -45,6 +48,7 @@ class Boid {
 			this.alignment(localBoids);
 			this.cohesion(localBoids);
 			this.separation(localBoids);
+			this.walls();
 			
 		}
 		//Adding noise to direction
@@ -85,7 +89,7 @@ class Boid {
 		let count = 0;
 		for (let boid of localBoids) {
 			let sep = eucDist(this.xPos, boid.xPos, this.yPos, boid.yPos);
-			if (sep < 30) {
+			if (sep < separationRadius) {
 				cX = this.xPos - boid.xPos;
 				cY = this.yPos - boid.yPos;
 				let normDiff = normalise(cX, cY);
@@ -135,7 +139,26 @@ class Boid {
 		this.xVel += deltaX;
 		this.yVel += deltaY;
 	}
+	
+	walls() {
+		if (walls) {
+			if (this.yPos < wallDisplacement) {
+				this.yVel += (wallDisplacement - this.yPos)/100;
+			}
+			else if (this.yPos > canvas.height-wallDisplacement) {
+				this.yVel += -(this.yPos - (canvas.height-wallDisplacement))/100;
+			}
+			if (this.xPos < wallDisplacement) {
+				this.xVel += (wallDisplacement - this.xPos)/100;
+			}
+			else if (this.xPos > canvas.width-wallDisplacement) {
+				this.xVel += -(this.xPos - (canvas.width-wallDisplacement))/100;
+			}
+		}		
+	}
 }
+
+
 
 function eucDist(x1, x2, y1, y2) {
 	let deltaX = x2 - x1;
@@ -160,8 +183,8 @@ function setup() {
 	for (let i = 0; i < numBoids; i++) {
 		boids.push(new Boid(Math.random()*canvas.width,
 		Math.random()*canvas.height,
-		Math.random()-0.5,
-		Math.random()-0.5,
+		(Math.random()-0.5)*maxSpeed,
+		(Math.random()-0.5)*maxSpeed,
 		'rgb(255, 255, 255)'));
 	}
 }
@@ -171,6 +194,12 @@ function setup() {
 document.addEventListener("keypress", function(event) {
   if (event.key == 'd') {
     debugging = !debugging;
+  }
+});
+
+document.addEventListener("keypress", function(event) {
+  if (event.key == 'w') {
+    walls = !walls;
   }
 });
 
